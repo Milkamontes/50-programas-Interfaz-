@@ -71,12 +71,12 @@ end_factorial:
 int_to_string:
     mov x1, #10             // Divisor para obtener dígitos en base 10
     ldr x2, =buffer + 19    // Puntero al final del buffer
-    mov w3, #0x30           // Offset para convertir dígito a ASCII
+    mov x3, #0x30           // Offset para convertir dígito a ASCII
 
 convert_loop:
     udiv x4, x0, x1         // Divide x0 entre 10
     msub x5, x4, x1, x0     // Calcula el residuo (x0 % 10)
-    add x5, x5, w3          // Convierte el residuo a ASCII
+    add x5, x5, x3          // ** CORRECCIÓN: Usa x3 en lugar de w3 para convertir el residuo a ASCII
     strb w5, [x2, #-1]!     // Almacena el carácter en el buffer (al revés)
     mov x0, x4              // Actualiza x0 con el cociente
     cbz x0, end_convert     // Si x0 es 0, terminamos
