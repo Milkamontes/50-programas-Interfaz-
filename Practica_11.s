@@ -1,69 +1,60 @@
-// Autor: Milka Guadalupe Montes Domínguez
-// Fecha: 10-11-24
-// Descripción: Verificar si una cadena es un palíndromo en ARM64
+// ================================
+// Programa: Verificación de palíndromo en ARM64
+// Descripción: Este programa verifica si una cadena es un palíndromo.
+// Autor: Milka Guadalupe Montes Dominguez 
+// Fecha: 11-11-204
+// ================================
 
-    .section .data
-cadena: .asciz "anilina"         // Cadena para verificar
-msg_palindrome: .asciz "Es un palindromo\n"
-msg_not_palindrome: .asciz "No es un palindromo\n"
+.section .data
+cadena: .asciz "anilina"  // La cadena a verificar
+resultado_palindromo: .asciz "Es un palíndromo\n"
+resultado_no_palindromo: .asciz "No es un palíndromo\n"
 
-    .section .text
-    .global _start
+.section .text
+.global _start
 
 _start:
     // Cargar la dirección de la cadena en x0
-    ldr x0, =cadena              // x0 apunta al inicio de la cadena
+    ldr x0, =cadena
+    
+    // Inicializar punteros para inicio y fin de la cadena
+    mov x1, x0  // x1 apunta al inicio
+    mov x2, x0  // x2 apunta también al inicio para luego mover al final
 
-    // Calcular la longitud de la cadena
-    mov x1, #0                   // x1 actuará como contador de longitud
+buscar_fin:
+    ldrb w3, [x2], #1     // Leer un byte (carácter) y avanzar
+    cmp w3, #0            // Verificar si es el fin de la cadena (carácter nulo)
+    b.ne buscar_fin       // Si no es fin, seguir avanzando
+    sub x2, x2, #2        // Retroceder para apuntar al último carácter válido
 
-strlen_loop:
-    ldrb w2, [x0, x1]            // Cargar el byte en la posición actual
-    cbz w2, check_palindrome     // Si encontramos el fin de cadena (byte 0), saltamos a verificar
-    add x1, x1, #1               // Incrementar el contador de longitud
-    b strlen_loop                // Repetir el bucle
+comparar:
+    ldrb w4, [x1], #1     // Leer el carácter desde el inicio
+    ldrb w5, [x2], #-1    // Leer el carácter desde el final
+    cmp w4, w5            // Comparar los caracteres
+    b.ne no_palindromo    // Si no son iguales, no es palíndromo
+    cmp x1, x2            // Verificar si los punteros se cruzaron
+    b.lt comparar         // Si no se cruzaron, continuar comparando
 
-check_palindrome:
-    // Inicializar punteros de inicio y fin
-    sub x1, x1, #1               // Ajustar x1 para que apunte al último carácter válido
-    mov x2, #0                   // Puntero al inicio de la cadena
-    add x3, x0, x1               // x3 apunta al último carácter de la cadena
+    // Si llega aquí, es un palíndromo
+    ldr x0, =resultado_palindromo
+    bl imprimir
+    b fin_programa
 
-palindrome_loop:
-    // Verificar si hemos cruzado los punteros
-    cmp x2, x1                   // Comparar punteros de inicio y fin
-    bge is_palindrome            // Si x2 >= x1, terminamos el bucle y es palíndromo
+no_palindromo:
+    // Si llega aquí, no es un palíndromo
+    ldr x0, =resultado_no_palindromo
+    bl imprimir
 
-    // Comparar caracteres en los extremos
-    ldrb w4, [x0, x2]            // Cargar el byte en el inicio (w4)
-    ldrb w5, [x3]                // Cargar el byte en el fin (w5)
-    cmp w4, w5                   // Comparar los bytes
-    bne not_palindrome           // Si son diferentes, no es palíndromo
+fin_programa:
+    mov x8, #93           // syscall: exit
+    mov x0, #0            // Estado de salida 0
+    svc #0                // Llamada al sistema
 
-    // Mover los punteros hacia el centro
-    add x2, x2, #1               // Avanzar el puntero de inicio
-    sub x3, x3, #1               // Retroceder el puntero de fin
-    b palindrome_loop            // Repetir el bucle
-
-is_palindrome:
-    // Preparación para imprimir "Es un palíndromo"
-    ldr x0, =msg_palindrome      // Cargar mensaje de palíndromo
-    mov x1, #1                   // Descriptor de archivo 1 (stdout)
-    mov x2, #18                  // Longitud del mensaje
-    mov x8, #64                  // syscall write
-    svc #0                       // Llamada al sistema
-    b end_program                // Saltar al final
-
-not_palindrome:
-    // Preparación para imprimir "No es un palíndromo"
-    ldr x0, =msg_not_palindrome  // Cargar mensaje de no palíndromo
-    mov x1, #1                   // Descriptor de archivo 1 (stdout)
-    mov x2, #20                  // Longitud del mensaje
-    mov x8, #64                  // syscall write
-    svc #0                       // Llamada al sistema
-
-end_program:
-    // Salir del programa
-    mov x8, #93                  // Código de salida para syscall exit en ARM64
-    mov x0, #0                   // Código de retorno 0
-    svc #0                       // Llamada al sistema
+imprimir:
+    // Imprimir una cadena usando write (syscall número 64 en ARM64)
+    mov x1, x0            // x1 = dirección de la cadena
+    mov x2, #20           // Tamaño máximo a imprimir (ajustable)
+    mov x8, #64           // syscall: write
+    mov x0, #1            // 1 = salida estándar (stdout)
+    svc #0                // Llamada al sistema
+    ret
