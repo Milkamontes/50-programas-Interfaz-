@@ -33,16 +33,16 @@ columna_loop:
     bge next_fila              // Si hemos procesado todas las columnas, pasar a la siguiente fila
 
     // Calcular el índice de matrizA en la posición (fila, columna)
-    mul w5, w3, w2             // w5 = fila * tamaño (desplazamiento de la fila)
-    add w5, w5, w4             // w5 = fila * tamaño + columna (índice de matrizA)
+    mul x5, x3, x2             // x5 = fila * tamaño (desplazamiento de la fila)
+    add x5, x5, x4             // x5 = fila * tamaño + columna (índice de matrizA)
 
     // Calcular el índice de la posición transpuesta (columna, fila)
-    mul w6, w4, w2             // w6 = columna * tamaño (desplazamiento de la columna en transpuesta)
-    add w6, w6, w3             // w6 = columna * tamaño + fila (índice de transpuesta)
+    mul x6, x4, x2             // x6 = columna * tamaño (desplazamiento de la columna en transpuesta)
+    add x6, x6, x3             // x6 = columna * tamaño + fila (índice de transpuesta)
 
     // Cargar el valor de matrizA y almacenar en la posición transpuesta
-    ldr w7, [x0, w5, LSL #2]   // Cargar matrizA[fila][columna] en w7
-    str w7, [x1, w6, LSL #2]   // Guardar en transpuesta[columna][fila]
+    ldr w7, [x0, x5, LSL #2]   // Cargar matrizA[fila][columna] en w7
+    str w7, [x1, x6, LSL #2]   // Guardar en transpuesta[columna][fila]
 
     // Incrementar columna
     add w4, w4, #1
