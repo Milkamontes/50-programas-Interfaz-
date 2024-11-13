@@ -1,7 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Conversión de un entero a cadena ASCII en ARM64
-
+// Asciinema: https://asciinema.org/a/688627
     .section .data
 msg_resultado: .asciz "El número en ASCII es: %s\n"
 buffer: .space 20               // Buffer para almacenar el número convertido en ASCII
