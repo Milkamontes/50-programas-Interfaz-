@@ -1,6 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 05-11-2024
 // Descripción: Invertir una cadena de texto en ARM64
+// Asciinema: https://asciinema.org/a/688536
 
     .section .data
 original_str: .asciz "Hola, mundo!"      // Cadena original
