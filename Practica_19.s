@@ -1,6 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Suma de dos matrices 3x3 en ARM64
+// Asciinema: https://asciinema.org/a/688623
 
     .section .data
 matrizA: .word 1, 2, 3, 4, 5, 6, 7, 8, 9      // Matriz A de 3x3
