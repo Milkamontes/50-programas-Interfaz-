@@ -1,6 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 05-11-2024
 // Descripción: Verificación de si un número es primo en ARM64
+// Asciinema: https://asciinema.org/a/688536
 
     .section .data
 msg_prime: .asciz "El número %d es primo.\n"
