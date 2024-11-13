@@ -1,7 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 05-11-2024
 // Descripción: División de dos números en ARM64
-
+// Asciinema: https://asciinema.org/a/687761
     .section .data
 result: .asciz "El cociente es: %d\n"
 
