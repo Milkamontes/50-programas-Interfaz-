@@ -1,6 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Búsqueda binaria de un número en un arreglo ordenado de enteros en ARM64
+// Asciinema: https://asciinema.org/a/688609
 
     .section .data
 arreglo: .word 3, 10, 15, 20, 25, 30, 35, 40  // Arreglo ordenado de números enteros
