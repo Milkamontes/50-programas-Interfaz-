@@ -1,6 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 05-11-2024
 // Descripción: Multiplicación de dos números en ARM64
+// Asciinema: https://asciinema.org/a/687759
 
     .section .data
 result: .asciz "El producto es: %d\n"
