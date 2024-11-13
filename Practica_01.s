@@ -2,6 +2,7 @@
 // Fecha: 05-11-2024
 // Descripción: Convertir temperatura de Celsius a Fahrenheit
 // Fórmula: Fahrenheit = (Celsius * 9 / 5) + 32
+// Asciinema: https://asciinema.org/a/687672
 
     .section .data
 result: .asciz "Temperatura en Fahrenheit: %d\n"
