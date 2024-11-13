@@ -1,7 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 05-11-2024
 // Descripción: Suma de los primeros N números naturales en ARM64
-
+// Adciinema: https://asciinema.org/a/687764
     .section .data
 result: .asciz "La suma de los primeros %d números naturales es: %d\n"
 
