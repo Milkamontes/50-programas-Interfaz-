@@ -2,6 +2,7 @@
 // Fecha: 10-11-24
 // Descripción: Ordenamiento burbuja de un arreglo de enteros en ARM64
 // Asciinema: https://asciinema.org/a/690533
+
                 .section .data
 array:  .word 8, 5, 3, 1, 7, 6, 2, 4  // Arreglo a ordenar
 n:      .word 8                       // Número de elementos
