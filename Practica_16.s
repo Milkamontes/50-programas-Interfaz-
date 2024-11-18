@@ -1,73 +1,59 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Ordenamiento burbuja de un arreglo de enteros en ARM64
+// Asciinema: https://asciinema.org/a/690533
+                .section .data
+array:  .word 8, 5, 3, 1, 7, 6, 2, 4  // Arreglo a ordenar
+n:      .word 8                       // Número de elementos
 
- .section .data
-arreglo: .word 25, 10, 48, 3, 5, 30      // Arreglo desordenado
-tamano: .word 6                          // Tamaño del arreglo
-msg_resultado: .asciz "Arreglo ordenado: %d %d %d %d %d %d\n"
-
-.section .text
-.global _start
+        .section .text
+        .global _start
 
 _start:
-    // Cargar el tamaño del arreglo
-    ldr x1, =tamano            // Dirección del tamaño
-    ldr w1, [x1]               // Cargar el tamaño en w1 (número de elementos)
-
-    // Cargar la dirección del arreglo
-    ldr x2, =arreglo           // x2 apunta al inicio del arreglo
+        // Inicializar registros
+        ldr x0, =array                // Dirección base del arreglo
+        ldr x1, =n                    // Dirección de n
+        ldr w1, [x1]                  // Número de elementos en w1 (n)
 
 bubble_sort:
-    // Bucle externo: controla las pasadas
-    sub w3, w1, #1             // w3 = tamano - 1
+        // Iteración externa
+        sub w2, w1, #1                // w2 = n - 1 (límite del ciclo)
+        mov w3, #0                    // Bandera de intercambio (swapped = 0)
 
 outer_loop:
-    cbz w3, print_resultado    // Si w3 == 0, terminamos el ordenamiento
-
-    mov w4, #0                 // Índice del primer elemento en la pasada
+        mov w4, #0                    // Índice del ciclo interno (i = 0)
 
 inner_loop:
-    cmp w4, w3                 // Comparar índice con el tamaño restante
-    bge decrement_passes       // Si w4 >= w3, terminar pasada
+        cmp w4, w2                    // Verificar que i < límite
+        b.ge inner_done               // Si i >= límite, salir del ciclo interno
 
-    // Cargar los dos elementos a comparar
-    ldr w5, [x2, x4, LSL #2]   // arreglo[w4] en w5
-    lsl x7, x4, #2             // Desplazar w4 << 2
-    add x7, x2, x7             // Calcular la dirección de arreglo[w4 + 1]
-    ldr w6, [x7]               // arreglo[w4 + 1] en w6
+        lsl w5, w4, #2                // Calcular desplazamiento: i * 4 (en w5)
+        add x6, x0, w5, sxtw          // Dirección de array[i]
+        ldr w7, [x6]                  // Cargar array[i]
+        ldr w8, [x6, #4]              // Cargar array[i+1]
 
-    // Comparar e intercambiar si están en orden incorrecto
-    cmp w5, w6                 // Comparar arreglo[w4] con arreglo[w4 + 1]
-    ble skip_swap              // Si arreglo[w4] <= arreglo[w4 + 1], saltar
+        // Comparar array[i] y array[i+1]
+        cmp w7, w8
+        b.le no_swap                  // Si array[i] <= array[i+1], no intercambiar
 
-    // Intercambiar elementos
-    str w6, [x2, x4, LSL #2]   // Guardar arreglo[w4 + 1] en arreglo[w4]
-    str w5, [x7]               // Guardar arreglo[w4] en arreglo[w4 + 1]
+        // Intercambiar array[i] y array[i+1]
+        str w8, [x6]                  // array[i] = array[i+1]
+        str w7, [x6, #4]              // array[i+1] = array[i]
+        mov w3, #1                    // swapped = 1
 
-skip_swap:
-    add w4, w4, #1             // Incrementar el índice
-    b inner_loop               // Repetir el bucle interno
+no_swap:
+        add w4, w4, #1                // i++
+        b inner_loop                  // Repetir ciclo interno
 
-decrement_passes:
-    sub w3, w3, #1             // Decrementar el número de pasadas
-    b outer_loop               // Repetir el bucle externo
+inner_done:
+        // Comprobar si hubo intercambio
+        cmp w3, #0
+        b.eq done                     // Si no hubo intercambio, salir
+        sub w2, w2, #1                // Reducir límite del ciclo
+        b outer_loop                  // Repetir ciclo externo
 
-print_resultado:
-    // Preparación para imprimir el arreglo ordenado
-    ldr x0, =msg_resultado     // Cargar el mensaje
-    mov x1, #0                 // Inicializar índice del bucle
-print_loop:
-    cmp w1, x1                 // Comparar índice con tamaño
-    bge end_program            // Si índice >= tamaño, terminar
-
-    ldr w2, [x2, x1, LSL #2]   // Cargar elemento en w2
-    bl printf                  // Llamar a printf para imprimir el elemento
-    add x1, x1, #1             // Incrementar índice
-    b print_loop               // Repetir bucle de impresión
-
-end_program:
-    mov x8, #93                // syscall exit
-    mov x0, #0                 // Código de retorno
-    svc #0                     // Llamada al sistema
-
+done:
+        // Terminar el programa
+        mov w8, #93                   // syscall: exit
+        mov x0, #0                    // Código de salida
+        svc #0
