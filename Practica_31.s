@@ -1,60 +1,119 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Este programa calcula el Mínimo Común Múltiplo (MCM) de dos números
-//              utilizando la relación MCM(a, b) = (a * b) / MCD(a, b). Los números de entrada 
-//              deben estar en los registros x0 y x1, y el resultado se almacenará en x0.
 
-.section .data
-msg: .asciz "MCM: %d\n"
-buffer: .space 16                  // Espacio para el número convertido
 
-.section .text
-.global _start
+.data
+    msg_num1: .asciz "Ingrese el primer número: "
+    msg_num2: .asciz "Ingrese el segundo número: "
+    formato_in: .asciz "%ld"
+    msg_resultado: .asciz "El MCM de %ld y %ld es: %ld\n"
 
-_start:
-    mov x0, #15
-    mov x1, #20
+.text
+.global main
+.align 2
 
-    mov x2, x0
-    mov x3, x1
+main:
+    stp x29, x30, [sp, -16]!
+    mov x29, sp
 
-    bl mcd
+    // Pedir primer número al usuario
+    adrp x0, msg_num1
+    add x0, x0, :lo12:msg_num1
+    bl printf
 
-    mul x1, x2, x3
-    udiv x0, x1, x0
-
-    mov x2, buffer                 // Dirección del buffer
-    mov x1, x0                     // Número a convertir
-    bl itoa                        // Convierte a texto
-
-    mov x0, 1                      // stdout
-    ldr x1, =msg                   // Mensaje base
-    mov x2, buffer                 // Número convertido
-    mov x8, #64                    // Syscall write
-    svc #0                         // Llama a write
-
-    mov w8, #93                    // Syscall exit
-    svc #0
-
-mcd:
-    cmp x1, #0
-    beq end_mcd
-    udiv x2, x0, x1
-    msub x2, x2, x1, x0
-    mov x0, x1
+    // Leer primer número
+    sub sp, sp, #16
+    mov x2, sp
+    adrp x0, formato_in
+    add x0, x0, :lo12:formato_in
     mov x1, x2
-    b mcd
-end_mcd:
+    bl scanf
+
+    // Guardar primer número
+    ldr x19, [sp]
+    add sp, sp, #16
+
+    // Pedir segundo número al usuario
+    adrp x0, msg_num2
+    add x0, x0, :lo12:msg_num2
+    bl printf
+
+    // Leer segundo número
+    sub sp, sp, #16
+    mov x2, sp
+    adrp x0, formato_in
+    add x0, x0, :lo12:formato_in
+    mov x1, x2
+    bl scanf
+
+    // Guardar segundo número
+    ldr x20, [sp]
+    add sp, sp, #16
+
+    // Calcular MCM
+    mov x0, x19
+    mov x1, x20
+    bl mcm
+
+    // Guardar resultado
+    mov x21, x0
+
+    // Imprimir resultado
+    adrp x0, msg_resultado
+    add x0, x0, :lo12:msg_resultado
+    mov x1, x19
+    mov x2, x20
+    mov x3, x21
+    bl printf
+
+    // Salir del programa
+    mov x0, #0
+    ldp x29, x30, [sp], #16
     ret
 
-itoa:                              // Convierte número en x1 a texto en buffer
-    mov x2, x1                     // Número
-    mov x3, #10                    // Base decimal
-itoa_loop:
-    udiv x4, x2, x3
-    msub x5, x4, x3, x2
-    add x5, x5, #'0'
-    strb w5, [x0], #1
-    mov x2, x4
+// Función para calcular el MCM
+mcm:
+    // x0: primer número (a)
+    // x1: segundo número (b)
+    stp x29, x30, [sp, -16]!
+    mov x29, sp
+
+    // Guardar a y b
+    mov x19, x0
+    mov x20, x1
+
+    // Calcular MCD
+    bl mcd
+
+    // Guardar MCD en x21
+    mov x21, x0
+
+    // Calcular |a * b|
+    mul x22, x19, x20
+    cmp x22, #0
+    cneg x22, x22, mi  // Si es negativo, lo convertimos a positivo
+
+    // Calcular MCM = |a * b| / MCD
+    udiv x0, x22, x21
+
+    ldp x29, x30, [sp], #16
+    ret
+
+// Función para calcular el MCD usando el algoritmo de Euclides
+mcd:
+    // x0: primer número (a)
+    // x1: segundo número (b)
+loop_mcd:
+    cbz x1, end_mcd   // Si b == 0, terminar
+    udiv x2, x0, x1   // x2 = a / b
+    msub x2, x2, x1, x0  // x2 = a - (a / b) * b (es decir, a % b)
+    mov x0, x1        // a = b
+    mov x1, x2        // b = a % b
+    b loop_mcd
+
+end_mcd:
+    // El MCD está en x0
+    ret
     cbnz x2, itoa_loop
     ret
