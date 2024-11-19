@@ -1,87 +1,123 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Ordenamiento por selección de un arreglo de enteros en ARM64
+// Asciinema: https://asciinema.org/a/690543
 
-    .section .data
-arreglo: .word 25, 10, 48, 3, 5, 30        // Arreglo desordenado de números enteros
-tamano: .word 6                            // Tamaño del arreglo
-msg_resultado: .asciz "Arreglo ordenado:\n" // Mensaje para resultado
-msg_elemento: .asciz "%d "                 // Formato para imprimir cada elemento
+.global _start
+.global selection_sort
 
-    .section .text
-    .global _start
+.section .data
+arr:    .word 5, 3, 8, 6, 2       // Un ejemplo de arreglo para ordenar
+size:   .word 5                   // Tamaño del arreglo
+msg:    .asciz "Arreglo ordenado: " // Mensaje inicial
+sep:    .asciz ", "               // Separador para los números
 
+.section .text
 _start:
-    // Cargar el tamaño del arreglo
-    ldr x1, =tamano            // Dirección del tamaño
-    ldr w1, [x1]               // Tamaño del arreglo en w1
+    // Inicialización de los parámetros
+    ldr x0, =arr                // Poner la dirección de arr en x0 (puntero a la lista)
+    ldr x1, =size               // Poner la dirección de size en x1
+    ldr w1, [x1]                // Cargar el tamaño del arreglo en w1
+    bl selection_sort           // Llamar a la función de ordenamiento
 
-    // Validar que el tamaño del arreglo sea mayor a 0
-    cmp w1, #0
-    ble end_program            // Si tamaño <= 0, terminar el programa
+    // Imprimir el mensaje inicial
+    ldr x0, =msg                // Dirección del mensaje en x0
+    bl print_string             // Imprimir el mensaje
 
-    // Cargar la dirección del arreglo
-    ldr x2, =arreglo           // x2 apunta al inicio del arreglo
+    // Imprimir los números del arreglo
+    ldr x0, =arr                // Puntero al arreglo
+    ldr w1, [x1]                // Tamaño del arreglo
+    bl print_array              // Imprimir el arreglo
 
+    // Salir del programa
+    mov x8, #93                 // Número de syscall para _exit
+    mov x0, #0                  // Código de salida
+    svc #0                      // Hacer la llamada al sistema
+
+// Función: selection_sort
 selection_sort:
-    mov w3, #0                 // Índice externo para el bucle
+    // x0: puntero a la lista de números
+    // x1: tamaño de la lista
 
-outer_loop:
-    cmp w3, w1                 // Comparar índice externo con el tamaño
-    bge print_resultado        // Si hemos recorrido todo el arreglo, pasamos a imprimir
+    mov x2, #0                  // x2 es el índice i
+loop_i:
+    cmp x2, x1                  // Compara i con el tamaño de la lista
+    bge end_loop_i              // Si i >= tamaño, termina el ciclo
 
-    mov w4, w3                 // Inicializar índice mínimo (w4) con w3
-    ldr w5, [x2, w3, LSL #2]   // Valor mínimo actual
+    // Encuentra el índice mínimo
+    add x3, x2, #1              // x3 es el índice j (comienza en i+1)
+    mov x4, x2                  // x4 es el índice mínimo (inicia en i)
 
-    mov w6, w3                 // Inicializar índice interno
-    add w6, w6, #1             // Comenzar en el siguiente elemento
+loop_j:
+    cmp x3, x1                  // Compara j con el tamaño de la lista
+    bge swap_check              // Si j >= tamaño, salta a la comprobación de intercambio
 
-inner_loop:
-    cmp w6, w1                 // Verificar si índice interno está dentro del rango
-    bge swap_min               // Si hemos terminado, pasar al intercambio
+    // Cargar valores para comparar
+    ldr w5, [x0, x4, lsl #2]    // Cargar valor en la posición min (índice x4)
+    ldr w6, [x0, x3, lsl #2]    // Cargar valor en la posición j (índice x3)
+    cmp w6, w5                  // Compara arr[j] con arr[min]
+    bge next_j                  // Si arr[j] >= arr[min], sigue al siguiente j
 
-    ldr w7, [x2, w6, LSL #2]   // Cargar arreglo[w6] en w7
-    cmp w7, w5                 // Comparar con el mínimo actual
-    bge skip_update            // Si arreglo[w6] >= mínimo actual, no actualizar
+    // Actualizar el índice mínimo
+    mov x4, x3                  // Actualiza min a j
 
-    mov w4, w6                 // Actualizar índice mínimo
-    mov w5, w7                 // Actualizar valor mínimo
+next_j:
+    add x3, x3, #1              // Incrementa j
+    b loop_j                    // Repite el ciclo de j
 
-skip_update:
-    add w6, w6, #1             // Incrementar índice interno
-    b inner_loop               // Repetir el bucle interno
+swap_check:
+    cmp x2, x4                  // Si i != min, realiza un intercambio
+    beq next_i                  // Si son iguales, no es necesario intercambiar
 
-swap_min:
-    cmp w4, w3                 // Comprobar si el índice mínimo es el mismo
-    beq skip_swap              // Si no hay cambio, saltar intercambio
+    // Intercambiar arr[i] y arr[min]
+    ldr w5, [x0, x2, lsl #2]    // Cargar arr[i]
+    ldr w6, [x0, x4, lsl #2]    // Cargar arr[min]
+    str w6, [x0, x2, lsl #2]    // Guardar arr[min] en arr[i]
+    str w5, [x0, x4, lsl #2]    // Guardar arr[i] en arr[min]
 
-    ldr w8, [x2, w3, LSL #2]   // Cargar arreglo[w3] en w8
-    str w5, [x2, w3, LSL #2]   // Guardar el valor mínimo en arreglo[w3]
-    str w8, [x2, w4, LSL #2]   // Guardar arreglo[w3] en arreglo[w4]
+next_i:
+    add x2, x2, #1              // Incrementa i
+    b loop_i                    // Repite el ciclo de i
 
-skip_swap:
-    add w3, w3, #1             // Incrementar índice externo
-    b outer_loop               // Repetir el bucle externo
+end_loop_i:
+    ret                          // Termina la función
 
-print_resultado:
-    ldr x0, =msg_resultado     // Mensaje inicial
-    bl printf                  // Imprimir mensaje
+// Función: print_string
+// Imprime una cadena de texto terminada en '\0'
+print_string:
+    mov x8, #64                 // Número de syscall para write
+    mov x1, x0                  // Dirección de la cadena
+    mov x2, #20                 // Tamaño aproximado (ajustar según tu cadena)
+    mov x0, #1                  // Salida estándar (stdout)
+    svc #0                      // Hacer la llamada al sistema
+    ret
 
-    mov w3, #0                 // Inicializar índice para impresión
-
+// Función: print_array
+// Imprime un arreglo de enteros
+print_array:
+    mov x3, #0                  // Índice actual
 print_loop:
-    cmp w3, w1                 // Verificar si índice está dentro del rango
-    bge end_program            // Si hemos terminado, salir
+    cmp x3, x1                  // Compara índice con el tamaño del arreglo
+    bge end_print_loop          // Si índice >= tamaño, termina
 
-    ldr w4, [x2, w3, LSL #2]   // Cargar elemento actual en w4
-    ldr x0, =msg_elemento      // Formato para imprimir el número
-    mov x1, w4                 // Pasar el número como argumento a printf
-    bl printf                  // Imprimir el elemento
+    // Cargar el valor actual
+    ldr w4, [x0, x3, lsl #2]    // Cargar arr[i] en w4
 
-    add w3, w3, #1             // Incrementar índice
-    b print_loop               // Repetir el bucle de impresión
+    // Mostrar número (esto sería un stub si no tienes una función de conversión)
+    bl print_number
 
-end_program:
-    mov x8, #93                // syscall: exit
-    mov x0, #0                 // Código de salida
-    svc #0                     // Llamada al sistema
+    // Imprimir separador
+    ldr x5, =sep                // Dirección del separador
+    bl print_string             // Imprimir separador
+
+    add x3, x3, #1              // Incrementar índice
+    b print_loop
+
+end_print_loop:
+    ret
+
+// Función: print_number
+// Imprime un número en formato decimal
+print_number:
+    // (Aquí puedes implementar la conversión de número a cadena si es necesario)
+    ret
