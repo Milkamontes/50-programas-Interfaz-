@@ -2,137 +2,98 @@
 // Fecha: 10-11-24
 // Descripción: Ordenamiento por mezcla (Merge Sort) de un arreglo de enteros en ARM64
 
-    .section .data
-arreglo: .word 25, 10, 48, 3, 5, 30      // Arreglo desordenado de números enteros
-tamano: .word 6                          // Tamaño del arreglo
-temp: .space 24                          // Espacio temporal para mezclar elementos (6 elementos * 4 bytes)
-msg_resultado: .asciz "Arreglo ordenado: %d %d %d %d %d %d\n"
+    .data
+array: .word 12, 45, 7, 23, 67, 89, 34, 56, 90, 14    // Arreglo a ordenar
+arr_len: .word 10                                      // Longitud del arreglo
+temp_array: .zero 40                                   // Arreglo temporal (10 elementos * 4 bytes)
+msg_before: .asciz "Arreglo antes de ordenar:\n"
+msg_after: .asciz "Arreglo después de ordenar:\n"
+msg_elem: .asciz "%d "                                 // Para imprimir cada elemento
+msg_nl: .asciz "\n"                                    // Nueva línea
 
-    .section .text
-    .global _start
+.text
+.global main
 
-_start:
-    // Cargar el tamaño del arreglo
-    ldr x1, =tamano            // Dirección del tamaño
-    ldr w1, [x1]               // Cargar el tamaño en w1
+// Función principal
+main:
+    stp x29, x30, [sp, -16]!    // Guardar registros
+    mov x29, sp
 
-    // Cargar la dirección del arreglo
-    ldr x2, =arreglo           // x2 apunta al inicio del arreglo
-    ldr x3, =temp              // x3 apunta al arreglo temporal
+    // Imprimir mensaje inicial
+    adrp x0, msg_before
+    add x0, x0, :lo12:msg_before
+    bl printf
+
+    // Imprimir arreglo original
+    bl print_array
+
+    // Preparar parámetros para merge_sort
+    adrp x0, array
+    add x0, x0, :lo12:array     // x0 = dirección del arreglo
+    mov x1, #0                  // x1 = inicio (0)
+    adrp x2, arr_len
+    add x2, x2, :lo12:arr_len
+    ldr w2, [x2]               
+    sub x2, x2, #1              // x2 = fin (n-1)
 
     // Llamar a merge_sort
-    mov w4, #0                 // Índice inicial (0)
-    sub w5, w1, #1             // Índice final (tamaño - 1)
-    bl merge_sort              // Llamada a merge_sort(arreglo, temp, 0, tamaño - 1)
+    bl merge_sort
 
-    // Preparación para imprimir el arreglo ordenado
-    ldr x0, =msg_resultado     // Cargar el mensaje del arreglo ordenado
-    ldr w1, [x2]               // Cargar arreglo[0] en w1
-    ldr w2, [x2, #4]           // Cargar arreglo[1] en w2
-    ldr w3, [x2, #8]           // Cargar arreglo[2] en w3
-    ldr w4, [x2, #12]          // Cargar arreglo[3] en w4
-    ldr w5, [x2, #16]          // Cargar arreglo[4] en w5
-    ldr w6, [x2, #20]          // Cargar arreglo[5] en w6
+    // Imprimir mensaje final
+    adrp x0, msg_after
+    add x0, x0, :lo12:msg_after
+    bl printf
 
-    // Llamada a printf para mostrar el arreglo ordenado
-    bl printf                  // Llamada a printf para mostrar el arreglo
+    // Imprimir arreglo ordenado
+    bl print_array
 
-    // Salir del programa
-    mov x8, #93                // Código de salida para syscall exit en ARM64
-    mov x0, #0                 // Código de retorno 0
-    svc #0                     // Llamada al sistema
+    // Restaurar y retornar
+    ldp x29, x30, [sp], 16
+    ret
 
-// Subrutina: merge_sort
+// Función merge_sort(arr, inicio, fin)
 merge_sort:
-    cmp w4, w5                 // Si inicio >= fin, retorno (caso base)
-    bge end_merge_sort
+    stp x29, x30, [sp, -48]!    // Guardar registros y espacio para variables locales
+    mov x29, sp
+    
+    // Guardar parámetros
+    str x0, [x29, 16]           // Guardar dirección del arreglo
+    str x1, [x29, 24]           // Guardar inicio
+    str x2, [x29, 32]           // Guardar fin
 
-    // Calcular el índice medio
-    add w6, w4, w5             // w6 = inicio + fin
-    lsr w6, w6, #1             // w6 = (inicio + fin) / 2
+    // Verificar caso base
+    cmp x1, x2                  // Si inicio >= fin, retornar
+    bge merge_sort_end
 
-    // Ordenar la mitad izquierda
-    mov w7, w4                 // w7 = inicio
-    mov w8, w6                 // w8 = medio
-    bl merge_sort              // Llamada recursiva a merge_sort(arreglo, temp, inicio, medio)
+    // Calcular punto medio
+    add x3, x1, x2              // x3 = inicio + fin
+    lsr x3, x3, #1              // x3 = (inicio + fin) / 2
 
-    // Ordenar la mitad derecha
-    add w7, w6, #1             // w7 = medio + 1
-    mov w8, w5                 // w8 = fin
-    bl merge_sort              // Llamada recursiva a merge_sort(arreglo, temp, medio + 1, fin)
+    // Guardar punto medio
+    str x3, [x29, 40]
 
-    // Fusionar ambas mitades
-    mov w7, w4                 // w7 = inicio
-    mov w8, w6                 // w8 = medio
-    add w9, w6, #1             // w9 = medio + 1
-    mov w10, w5                // w10 = fin
-    bl merge                   // Llamada a merge(arreglo, temp, inicio, medio, fin)
+    // Llamada recursiva para primera mitad
+    ldr x0, [x29, 16]           // Recuperar dirección del arreglo
+    ldr x1, [x29, 24]           // Recuperar inicio
+    mov x2, x3                  // fin = medio
+    bl merge_sort
 
-end_merge_sort:
+    // Llamada recursiva para segunda mitad
+    ldr x0, [x29, 16]           // Recuperar dirección del arreglo
+    ldr x1, [x29, 40]           // inicio = medio
+    add x1, x1, #1              // inicio = medio + 1
+    ldr x2, [x29, 32]           // Recuperar fin
+    bl merge_sort
+
+    // Mezclar las dos mitades
+    ldr x0, [x29, 16]           // Recuperar dirección del arreglo
+    ldr x1, [x29, 24]           // Recuperar inicio
+    ldr x2, [x29, 40]           // Recuperar medio
+    ldr x3, [x29, 32]           // Recuperar fin
+    bl merge
+
+merge_sort_end:
+    ldp x29, x30, [sp], 48
     ret
 
-// Subrutina: merge
-merge:
-    mov x11, x7                // Índice para la mitad izquierda (inicio)
-    mov x12, x9                // Índice para la mitad derecha (medio + 1)
-    mov x13, #0                // Índice para el arreglo temporal
-
-merge_loop:
-    cmp x11, x8                // Comparar índice izquierdo con el medio
-    bgt right_remain           // Si el izquierdo ha terminado, fusionar solo la derecha
-
-    cmp x12, x10               // Comparar índice derecho con el fin
-    bgt left_remain            // Si el derecho ha terminado, fusionar solo la izquierda
-
-    ldr w14, [x2, x11, LSL #2] // Cargar arreglo[w11]
-    ldr w15, [x2, x12, LSL #2] // Cargar arreglo[w12]
-
-    cmp w14, w15               // Comparar arreglo[w11] y arreglo[w12]
-    ble use_left               // Si arreglo[w11] <= arreglo[w12], usar el izquierdo
-
-    // Usar el elemento derecho
-    str w15, [x3, x13, LSL #2] // temp[w13] = arreglo[w12]
-    add x12, x12, #1           // Incrementar índice derecho
-    b next_index
-
-use_left:
-    str w14, [x3, x13, LSL #2] // temp[w13] = arreglo[w11]
-    add x11, x11, #1           // Incrementar índice izquierdo
-
-next_index:
-    add x13, x13, #1           // Incrementar índice temporal
-    b merge_loop
-
-right_remain:
-    cmp x12, x10
-    bgt copy_to_array
-
-    ldr w15, [x2, x12, LSL #2] // Cargar arreglo[w12]
-    str w15, [x3, x13, LSL #2] // temp[w13] = arreglo[w12]
-    add x12, x12, #1           // Incrementar índice derecho
-    add x13, x13, #1           // Incrementar índice temporal
-    b right_remain
-
-left_remain:
-    cmp x11, x8
-    bgt copy_to_array
-
-    ldr w14, [x2, x11, LSL #2] // Cargar arreglo[w11]
-    str w14, [x3, x13, LSL #2] // temp[w13] = arreglo[w11]
-    add x11, x11, #1           // Incrementar índice izquierdo
-    add x13, x13, #1           // Incrementar índice temporal
-    b left_remain
-
-copy_to_array:
-    mov x14, x7                // x14 = inicio
-copy_loop:
-    cmp x14, x10
-    bgt end_merge
-    ldr w15, [x3, x14, LSL #2] // Cargar temp[x14]
-    str w15, [x2, x14, LSL #2] // arreglo[x14] = temp[x14]
-    add x14, x14, #1
-    b copy_loop
-
-end_merge:
-    ret
-
+// Función merge(arr, inicio, medio, fin)
