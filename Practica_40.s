@@ -1,6 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Convertir un número binario (cadena) a decimal en ARM64
+// Asciinema: https://asciinema.org/a/690680
 
     .section .data
 binario: .asciz "11001"             // Número binario como cadena (25 en decimal)
