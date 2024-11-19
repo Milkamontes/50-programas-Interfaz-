@@ -2,6 +2,7 @@
 // Fecha: 05-11-2024
 // Descripción: Cálculo del factorial de un número en ARM64. El programa calcula el factorial de un número entero positivo
 // utilizando un bucle para realizar la multiplicación acumulativa. El resultado se imprime en pantalla.
+// Asciinema: https://asciinema.org/a/690691
 
     .section .data
 result_msg: .asciz "El factorial es: "    // Mensaje fijo para el resultado
