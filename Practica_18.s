@@ -43,11 +43,6 @@ _start:
     svc #0                     // Llamada al sistema
 
 // Subrutina: merge_sort
-// Parámetros:
-//   x2: puntero al arreglo
-//   x3: puntero al arreglo temporal
-//   w4: índice inicial
-//   w5: índice final
 merge_sort:
     cmp w4, w5                 // Si inicio >= fin, retorno (caso base)
     bge end_merge_sort
@@ -77,78 +72,67 @@ end_merge_sort:
     ret
 
 // Subrutina: merge
-// Parámetros:
-//   x2: puntero al arreglo
-//   x3: puntero al arreglo temporal
-//   w7: índice de inicio
-//   w8: índice medio
-//   w10: índice de fin
 merge:
-    mov w11, w7                // Índice para la mitad izquierda (inicio)
-    mov w12, w9                // Índice para la mitad derecha (medio + 1)
-    mov w13, #0                // Índice para el arreglo temporal
+    mov x11, x7                // Índice para la mitad izquierda (inicio)
+    mov x12, x9                // Índice para la mitad derecha (medio + 1)
+    mov x13, #0                // Índice para el arreglo temporal
 
 merge_loop:
-    // Fusionar elementos de ambas mitades en el arreglo temporal
-    cmp w11, w8                // Comparar índice izquierdo con el medio
+    cmp x11, x8                // Comparar índice izquierdo con el medio
     bgt right_remain           // Si el izquierdo ha terminado, fusionar solo la derecha
 
-    cmp w12, w10               // Comparar índice derecho con el fin
+    cmp x12, x10               // Comparar índice derecho con el fin
     bgt left_remain            // Si el derecho ha terminado, fusionar solo la izquierda
 
-    // Comparar elementos y fusionar
-    ldr x14, [x2, x11, LSL #2] // Cargar arreglo[w11]
-    ldr x15, [x2, x12, LSL #2] // Cargar arreglo[w12]
+    ldr w14, [x2, x11, LSL #2] // Cargar arreglo[w11]
+    ldr w15, [x2, x12, LSL #2] // Cargar arreglo[w12]
 
-    cmp x14, x15               // Comparar arreglo[w11] y arreglo[w12]
+    cmp w14, w15               // Comparar arreglo[w11] y arreglo[w12]
     ble use_left               // Si arreglo[w11] <= arreglo[w12], usar el izquierdo
 
     // Usar el elemento derecho
-    str x15, [x3, x13, LSL #2] // temp[w13] = arreglo[w12]
+    str w15, [x3, x13, LSL #2] // temp[w13] = arreglo[w12]
     add x12, x12, #1           // Incrementar índice derecho
     b next_index
 
 use_left:
-    // Usar el elemento izquierdo
-    str x14, [x3, x13, LSL #2] // temp[w13] = arreglo[w11]
+    str w14, [x3, x13, LSL #2] // temp[w13] = arreglo[w11]
     add x11, x11, #1           // Incrementar índice izquierdo
 
 next_index:
     add x13, x13, #1           // Incrementar índice temporal
-    b merge_loop               // Repetir el bucle de fusión
+    b merge_loop
 
 right_remain:
-    // Copiar el resto de la mitad derecha
-    cmp x12, w10
+    cmp x12, x10
     bgt copy_to_array
 
-    ldr x15, [x2, x12, LSL #2] // Cargar arreglo[w12]
-    str x15, [x3, x13, LSL #2] // temp[w13] = arreglo[w12]
+    ldr w15, [x2, x12, LSL #2] // Cargar arreglo[w12]
+    str w15, [x3, x13, LSL #2] // temp[w13] = arreglo[w12]
     add x12, x12, #1           // Incrementar índice derecho
     add x13, x13, #1           // Incrementar índice temporal
     b right_remain
 
 left_remain:
-    // Copiar el resto de la mitad izquierda
     cmp x11, x8
     bgt copy_to_array
 
-    ldr x14, [x2, x11, LSL #2] // Cargar arreglo[w11]
-    str x14, [x3, x13, LSL #2] // temp[w13] = arreglo[w11]
+    ldr w14, [x2, x11, LSL #2] // Cargar arreglo[w11]
+    str w14, [x3, x13, LSL #2] // temp[w13] = arreglo[w11]
     add x11, x11, #1           // Incrementar índice izquierdo
     add x13, x13, #1           // Incrementar índice temporal
     b left_remain
 
 copy_to_array:
-    // Copiar el contenido de temp al arreglo original
-    mov x14, x7                // w14 = inicio
+    mov x14, x7                // x14 = inicio
 copy_loop:
-    cmp x14, w10
+    cmp x14, x10
     bgt end_merge
-    ldr x15, [x3, x14, LSL #2] // Cargar temp[w14]
-    str x15, [x2, x14, LSL #2] // arreglo[w14] = temp[w14]
+    ldr w15, [x3, x14, LSL #2] // Cargar temp[x14]
+    str w15, [x2, x14, LSL #2] // arreglo[x14] = temp[x14]
     add x14, x14, #1
     b copy_loop
 
 end_merge:
     ret
+
