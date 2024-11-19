@@ -1,6 +1,7 @@
-// Autor: Milka Guadalupe Montes Domínguez
+// Autor: Milka Guadalupe Montes Domínguez 
 // Fecha: 10-11-24
 // Descripción: Contar los bits activados en un número en ARM64
+// Asciinema: https://asciinema.org/a/690635
 
     .section .data
 num: .word 0b10101100             // Número inicial en binario (172 en decimal)
@@ -30,9 +31,7 @@ count_bits:
 
     // Preparación para imprimir el resultado
     ldr x0, =msg_resultado        // Cargar el mensaje de resultado
-    mov x1, w1                    // Mover el contador de bits activados a x1
-
-    // Llamada a printf para mostrar el número de bits activados
+    uxtw x1, w1                   // Extender w1 a x1 para evitar errores
     bl printf                     // Llamada a printf para mostrar el resultado
 
     // Salir del programa
