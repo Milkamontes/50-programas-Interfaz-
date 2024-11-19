@@ -1,97 +1,68 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
-// Descripción: Multiplicación de dos matrices 3x3 en ARM64
+// Descripción: Multiplicación de dos matrices utilizando instrucciones NEON en ARM64
+// Asciinema: https://asciinema.org/a/690604
 
-    .section .data
-matrizA: .word 1, 2, 3, 4, 5, 6, 7, 8, 9   // Matriz A de 3x3
-matrizB: .word 9, 8, 7, 6, 5, 4, 3, 2, 1   // Matriz B de 3x3
-resultado: .space 36                       // Matriz de resultados (3x3)
+.section .data
+    // Declarar matrices de ejemplo (puedes cambiar los valores)
+    matrix_a: .float 1.0, 2.0, 3.0, 4.0    // Matriz A (2x2)
+    matrix_b: .float 5.0, 6.0, 7.0, 8.0    // Matriz B (2x2)
+    matrix_c: .space 16                     // Espacio para Matriz C (2x2)
 
-msg_resultado: .asciz "Resultado de la multiplicacion de matrices:\n%d %d %d\n%d %d %d\n%d %d %d\n"
-
-    .section .text
-    .global _start
+.section .text
+.global _start
 
 _start:
-    // Cargar las direcciones de las matrices
-    ldr x0, =matrizA           // x0 apunta al inicio de matrizA
-    ldr x1, =matrizB           // x1 apunta al inicio de matrizB
-    ldr x2, =resultado         // x2 apunta al inicio de la matriz resultado
+    // Inicializar argumentos
+    ldr     X0, =matrix_a         // Dirección de la matriz A
+    ldr     X1, =matrix_b         // Dirección de la matriz B
+    ldr     X2, =matrix_c         // Dirección de la matriz C
+    mov     W3, #2                // Número de filas de A
+    mov     W4, #2                // Número de columnas de A / filas de B
+    mov     W5, #2                // Número de columnas de B
 
-    // Definir el tamaño de la matriz
-    mov w8, #3                 // Tamaño de la matriz (3x3)
-
-    // Bucle para recorrer filas de matrizA
-    mov w3, #0                 // Índice de fila de la matriz resultado
-fila_loop:
-    cmp w3, w8                 // Comparar con el tamaño de la matriz
-    bge print_resultado        // Si hemos procesado todas las filas, salimos
-
-    // Bucle para recorrer columnas de matrizB
-    mov w4, #0                 // Índice de columna de la matriz resultado
-columna_loop:
-    cmp w4, w8                 // Comparar con el tamaño de la matriz
-    bge next_fila              // Si hemos procesado todas las columnas, pasar a la siguiente fila
-
-    // Inicializar el acumulador de la suma para el elemento de la matriz resultado
-    mov w5, #0                 // Acumulador para la suma
-
-    // Bucle interno para realizar el producto y suma de la fila de A y columna de B
-    mov w6, #0                 // Índice k para el producto fila x columna
-producto_suma:
-    cmp w6, w8                 // Comparar k con el tamaño de la matriz
-    bge almacenar_resultado    // Si k == tamaño, hemos terminado la suma para este elemento
-
-    // Cargar el elemento de matrizA en la posición [fila][k]
-    mul w7, w3, w8             // w7 = fila * tamaño (desplazamiento de la fila)
-    add w7, w7, w6             // w7 = fila * tamaño + k (índice para matrizA)
-    ldr w9, [x0, w7, LSL #2]   // Cargar matrizA[fila][k] en w9
-
-    // Cargar el elemento de matrizB en la posición [k][columna]
-    mul w10, w6, w8            // w10 = k * tamaño (desplazamiento de la fila en matrizB)
-    add w10, w10, w4           // w10 = k * tamaño + columna (índice para matrizB)
-    ldr w11, [x1, w10, LSL #2] // Cargar matrizB[k][columna] en w11
-
-    // Multiplicar y acumular el resultado
-    mul w12, w9, w11           // w12 = matrizA[fila][k] * matrizB[k][columna]
-    add w5, w5, w12            // Acumular en w5
-
-    // Incrementar k para el siguiente elemento de la fila y columna
-    add w6, w6, #1
-    b producto_suma            // Repetir el bucle de producto y suma
-
-almacenar_resultado:
-    // Almacenar el resultado en la matriz resultado en la posición [fila][columna]
-    mul w7, w3, w8             // w7 = fila * tamaño (desplazamiento de la fila en resultado)
-    add w7, w7, w4             // w7 = fila * tamaño + columna (índice para resultado)
-    str w5, [x2, w7, LSL #2]   // Guardar el acumulador w5 en resultado[fila][columna]
-
-    // Incrementar columna
-    add w4, w4, #1
-    b columna_loop             // Repetir el bucle para la siguiente columna
-
-next_fila:
-    // Incrementar fila
-    add w3, w3, #1
-    b fila_loop                // Repetir el bucle para la siguiente fila
-
-print_resultado:
-    // Preparación para imprimir la matriz resultado
-    ldr x0, =msg_resultado     // Cargar el mensaje de resultado
-    ldr w1, [x2]               // Cargar resultado[0][0] en w1
-    ldr w2, [x2, #4]           // Cargar resultado[0][1] en w2
-    ldr w3, [x2, #8]           // Cargar resultado[0][2] en w3
-    ldr w4, [x2, #12]          // Cargar resultado[1][0] en w4
-    ldr w5, [x2, #16]          // Cargar resultado[1][1] en w5
-    ldr w6, [x2, #20]          // Cargar resultado[1][2] en w6
-    ldr w7, [x2, #24]          // Cargar resultado[2][0] en w7
-    ldr w8, [x2, #28]          // Cargar resultado[2][1] en w8
-    ldr w9, [x2, #32]          // Cargar resultado[2][2] en w9
-
-    // Llamada a printf para mostrar la matriz resultado
-    bl printf                  // Llamada a printf para mostrar la matriz
+    // Llamar a la función de multiplicación
+    bl      matrix_multiply
 
     // Salir del programa
-    mov x8, #93                // Código de salida para syscall exit en ARM64
-    mov x0, #0                 // Código de retorno 0
-    svc #0                     // Llamada al sistema
+    mov     X8, #93               // syscall: exit
+    mov     X0, #0                // Código de salida 0
+    svc     #0                    // Llamada al sistema
+
+matrix_multiply:
+    // Verificar si las dimensiones son válidas
+    cbz     W3, end             // Si m (filas de A) es 0, salir
+    cbz     W4, end             // Si n (columnas de A) es 0, salir
+    cbz     W5, end             // Si p (columnas de B) es 0, salir
+
+    mov     X6, X0              // Dirección base de A
+    mov     X7, X2              // Dirección base de C
+
+loop_rows:                       // Bucle sobre las filas de A
+    mov     X8, X1              // Reiniciar la dirección base de B
+    mov     W9, W5              // Reiniciar contador de columnas de B
+
+loop_columns:                    // Bucle sobre las columnas de B
+    dup     V0.4S, WZR          // Inicializar acumulador a 0 (vector de 4 floats)
+    mov     W10, W4             // Reiniciar contador de elementos de la fila/columna
+    mov     X11, X6             // Dirección base de la fila actual de A
+    mov     X12, X8             // Dirección base de la columna actual de B
+
+loop_elements:                   // Bucle sobre los elementos de la fila de A y columna de B
+    ld1     {V1.4S}, [X11], #16 // Cargar 4 floats de A
+    ld1     {V2.4S}, [X12], #16 // Cargar 4 floats de B
+    fmla    V0.4S, V1.4S, V2.4S // Acumular el producto de A y B
+    sub     W10, W10, #4        // Decrementar el contador
+    cbnz    W10, loop_elements  // Continuar hasta completar la fila/columna
+
+    st1     {V0.4S}, [X7], #16  // Almacenar el resultado en C
+    add     X8, X8, #16         // Mover a la siguiente columna de B
+    sub     W9, W9, #1          // Decrementar el contador de columnas de B
+    cbnz    W9, loop_columns    // Continuar hasta completar las columnas
+
+    add     X6, X6, #16         // Mover a la siguiente fila de A
+    sub     W3, W3, #1          // Decrementar el contador de filas de A
+    cbnz    W3, loop_rows       // Continuar hasta completar las filas
+
+end:
+    ret                         // Finalizar
