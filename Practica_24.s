@@ -1,38 +1,29 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Calcular la longitud de una cadena en ARM64
+// Asciinema:  https://asciinema.org/a/690611
 
-    .section .data
+.section .data
 cadena: .asciz "Hola, mundo!"     // Cadena cuya longitud queremos calcular
 msg_resultado: .asciz "La longitud de la cadena es: %d\n"
 
-    .section .text
-    .global _start
+.section .text
+.global _start
 
 _start:
-    // Cargar la dirección de la cadena en x0
     ldr x0, =cadena           // x0 apunta al inicio de la cadena
-
-    // Inicializar el contador de longitud en 0
-    mov w1, #0                // w1 será el contador de caracteres
+    mov w1, #0                // Inicializar el contador de longitud en 0
 
 calcular_longitud:
-    // Cargar el siguiente carácter en w2
-    ldrb w2, [x0, w1]         // Cargar el byte en la posición actual
+    uxtw x1, w1               // Extender w1 a x1 para usarlo como desplazamiento
+    ldrb w2, [x0, x1]         // Cargar el byte en la posición actual
     cbz w2, imprimir_resultado // Si w2 es 0 (fin de cadena), salir del bucle
-
-    // Incrementar el contador de longitud
     add w1, w1, #1            // Incrementar el contador de longitud
-
-    // Repetir el bucle
-    b calcular_longitud
+    b calcular_longitud        // Repetir el bucle
 
 imprimir_resultado:
-    // Preparar el mensaje para imprimir la longitud
     ldr x0, =msg_resultado    // Cargar el mensaje de resultado
-    mov x1, w1                // Mover la longitud calculada a x1 para imprimir
-
-    // Llamada a printf para mostrar la longitud
+    uxtw x1, w1               // Extender w1 a x1 para pasarlo a printf
     bl printf                 // Llamada a printf para mostrar el resultado
 
     // Salir del programa
