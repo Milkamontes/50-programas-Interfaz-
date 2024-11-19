@@ -4,82 +4,168 @@
 //              Incluye las operaciones push (apilar) y pop (desapilar) con verificación 
 //              de desbordamiento y subdesbordamiento. 
 
-.global _start         // Punto de entrada para el sistema operativo
 
-// Definición de constantes
-.equ STACK_SIZE, 10    // Tamaño máximo de la pila
+.data
+    msg_menu: .asciz "\nOperaciones de la pila:\n1. Push\n2. Pop\n3. Peek\n4. Mostrar pila\n5. Salir\nElija una opción: "
+    msg_push: .asciz "Ingrese el elemento a agregar: "
+    msg_pop: .asciz "Elemento removido: %ld\n"
+    msg_peek: .asciz "Elemento superior: %ld\n"
+    msg_empty: .asciz "La pila está vacía\n"
+    msg_full: .asciz "La pila está llena\n"
+    msg_stack: .asciz "Elementos de la pila (de arriba a abajo):\n"
+    formato_in: .asciz "%ld"
+    formato_out: .asciz "%ld "
+    newline: .asciz "\n"
 
-// Definición de la pila y el puntero de la pila
-.section .data
-stack: 
-    .space STACK_SIZE * 4  // Espacio para STACK_SIZE elementos (4 bytes por entero)
+.text
+.global main
+.align 2
 
-.section .bss
-stack_pointer: 
-    .word 0              // Puntero de la pila inicializado a 0
+// Constantes
+.equ STACK_SIZE, 10
+.equ ELEMENT_SIZE, 8
 
-// Operación Push
-// Argumentos:
-//   x0 - Valor a insertar en la pila
-push:
-    ldr w1, =STACK_SIZE  // Cargamos el tamaño máximo de la pila en w1
-    ldr w2, stack_pointer // Cargamos el puntero de la pila en w2
-    cmp w2, w1           // Comparamos el puntero con el tamaño máximo
-    bge stack_overflow   // Si puntero >= STACK_SIZE, hay desbordamiento
+main:
+    stp x29, x30, [sp, -16]!
+    mov x29, sp
 
-    // Guardar el valor en la pila
-    ldr x3, =stack       // Cargamos la dirección base de la pila en x3
-    str w0, [x3, w2, LSL #2]  // Guardamos el valor en stack[stack_pointer]
+    // Reservar espacio para la pila
+    sub sp, sp, #(STACK_SIZE * ELEMENT_SIZE)
+    mov x19, sp  // x19 = dirección base de la pila
+    mov x20, #0  // x20 = tope de la pila (índice)
 
-    // Incrementamos el puntero de la pila
-    add w2, w2, #1       // stack_pointer++
-    str w2, stack_pointer // Guardamos el nuevo puntero en memoria
-    ret                  // Retorno de la función push
+menu_loop:
+    // Mostrar menú
+    adrp x0, msg_menu
+    add x0, x0, :lo12:msg_menu
+    bl printf
 
-stack_overflow:
-    // Manejo de desbordamiento (opcional: puedes agregar una salida de error)
-    mov w0, #1           // Código de error para desbordamiento
-    b end_program        // Termina el programa
+    // Leer opción
+    sub sp, sp, #16
+    mov x2, sp
+    adrp x0, formato_in
+    add x0, x0, :lo12:formato_in
+    mov x1, x2
+    bl scanf
+    ldr x21, [sp]  // x21 = opción elegida
+    add sp, sp, #16
 
-// Operación Pop
-// Retorno:
-//   x0 - Valor eliminado de la pila
-pop:
-    ldr w2, stack_pointer // Cargamos el puntero de la pila en w2
-    cmp w2, #0           // Comparamos el puntero con 0
-    ble stack_underflow  // Si puntero <= 0, hay subdesbordamiento
+    // Ejecutar opción elegida
+    cmp x21, #1
+    b.eq option_push
+    cmp x21, #2
+    b.eq option_pop
+    cmp x21, #3
+    b.eq option_peek
+    cmp x21, #4
+    b.eq option_display
+    cmp x21, #5
+    b.eq exit_program
 
-    // Decrementamos el puntero de la pila antes de extraer el valor
-    sub w2, w2, #1       // stack_pointer--
-    str w2, stack_pointer // Guardamos el nuevo puntero en memoria
+    b menu_loop
 
-    // Extraemos el valor de la pila
-    ldr x3, =stack       // Cargamos la dirección base de la pila en x3
-    ldr w0, [x3, w2, LSL #2]  // Leemos el valor de stack[stack_pointer]
-    ret                  // Retorno de la función pop
+option_push:
+    // Verificar si la pila está llena
+    cmp x20, #STACK_SIZE
+    b.eq stack_full
 
-stack_underflow:
-    // Manejo de subdesbordamiento (opcional: puedes agregar una salida de error)
-    mov w0, #2           // Código de error para subdesbordamiento
-    b end_program        // Termina el programa
+    // Pedir elemento a agregar
+    adrp x0, msg_push
+    add x0, x0, :lo12:msg_push
+    bl printf
 
-// Programa principal
-_start:
-    // Ejemplo de uso de la pila
-    // Push de algunos valores
-    mov w0, #10          // Valor a insertar
-    bl push              // Llamada a push(10)
+    // Leer elemento
+    sub sp, sp, #16
+    mov x2, sp
+    adrp x0, formato_in
+    add x0, x0, :lo12:formato_in
+    mov x1, x2
+    bl scanf
+    ldr x22, [sp]  // x22 = elemento a agregar
+    add sp, sp, #16
 
-    mov w0, #20          // Valor a insertar
-    bl push              // Llamada a push(20)
+    // Agregar elemento a la pila
+    str x22, [x19, x20, lsl #3]
+    add x20, x20, #1
 
-    mov w0, #30          // Valor a insertar
-    bl push              // Llamada a push(30)
+    b menu_loop
 
-    // Pop de algunos valores
-    bl pop               // Llamada a pop (debería devolver 30 en w0)
-    bl pop               // Llamada a pop (debería devolver 20 en w0)
+option_pop:
+    // Verificar si la pila está vacía
+    cbz x20, stack_empty
 
-end_program:
-    mov w8, #93          // Código de salida del sistema para "exit" en Linux
-    svc #0               // Llamada al sistema para finalizar el programa
+    // Obtener elemento superior
+    sub x20, x20, #1
+    ldr x22, [x19, x20, lsl #3]
+
+    // Mostrar elemento removido
+    adrp x0, msg_pop
+    add x0, x0, :lo12:msg_pop
+    mov x1, x22
+    bl printf
+
+    b menu_loop
+
+option_peek:
+    // Verificar si la pila está vacía
+    cbz x20, stack_empty
+
+    // Obtener elemento superior sin removerlo
+    sub x21, x20, #1
+    ldr x22, [x19, x21, lsl #3]
+
+    // Mostrar elemento superior
+    adrp x0, msg_peek
+    add x0, x0, :lo12:msg_peek
+    mov x1, x22
+    bl printf
+
+    b menu_loop
+
+option_display:
+    // Verificar si la pila está vacía
+    cbz x20, stack_empty
+
+    // Mostrar mensaje de elementos de la pila
+    adrp x0, msg_stack
+    add x0, x0, :lo12:msg_stack
+    bl printf
+
+    // Mostrar elementos de la pila
+    mov x21, x20  // x21 = índice temporal
+display_loop:
+    sub x21, x21, #1
+    ldr x1, [x19, x21, lsl #3]
+    adrp x0, formato_out
+    add x0, x0, :lo12:formato_out
+    bl printf
+
+    cbnz x21, display_loop
+
+    // Nueva línea al final
+    adrp x0, newline
+    add x0, x0, :lo12:newline
+    bl printf
+
+    b menu_loop
+
+stack_full:
+    adrp x0, msg_full
+    add x0, x0, :lo12:msg_full
+    bl printf
+    b menu_loop
+
+stack_empty:
+    adrp x0, msg_empty
+    add x0, x0, :lo12:msg_empty
+    bl printf
+    b menu_loop
+
+exit_program:
+    // Liberar espacio de la pila
+    add sp, sp, #(STACK_SIZE * ELEMENT_SIZE)
+
+    // Salir del programa
+    mov x0, #0
+    ldp x29, x30, [sp], #16
+    ret
