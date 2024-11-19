@@ -1,9 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Este programa rota los elementos de un arreglo a la izquierda o a la derecha
-//              un número específico de posiciones. La dirección base del arreglo debe estar en x0,
-//              el número de elementos en x1, las posiciones a rotar en x2, y la dirección en x3 (0 = izquierda, 1 = derecha).
-//              El resultado se almacena en el mismo arreglo.
+
 
 .global _start            // Punto de entrada para el sistema operativo
 
