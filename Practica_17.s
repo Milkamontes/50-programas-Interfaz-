@@ -3,9 +3,10 @@
 // Descripción: Ordenamiento por selección de un arreglo de enteros en ARM64
 
     .section .data
-arreglo: .word 25, 10, 48, 3, 5, 30      // Arreglo desordenado de números enteros
-tamano: .word 6                          // Tamaño del arreglo
-msg_resultado: .asciz "Arreglo ordenado: %d %d %d %d %d %d\n"
+arreglo: .word 25, 10, 48, 3, 5, 30        // Arreglo desordenado de números enteros
+tamano: .word 6                            // Tamaño del arreglo
+msg_resultado: .asciz "Arreglo ordenado:\n" // Mensaje para resultado
+msg_elemento: .asciz "%d "                 // Formato para imprimir cada elemento
 
     .section .text
     .global _start
@@ -13,73 +14,74 @@ msg_resultado: .asciz "Arreglo ordenado: %d %d %d %d %d %d\n"
 _start:
     // Cargar el tamaño del arreglo
     ldr x1, =tamano            // Dirección del tamaño
-    ldr w1, [x1]               // Cargar el tamaño en w1 (número de elementos)
+    ldr w1, [x1]               // Tamaño del arreglo en w1
+
+    // Validar que el tamaño del arreglo sea mayor a 0
+    cmp w1, #0
+    ble end_program            // Si tamaño <= 0, terminar el programa
 
     // Cargar la dirección del arreglo
     ldr x2, =arreglo           // x2 apunta al inicio del arreglo
 
 selection_sort:
-    // Bucle externo: selecciona cada posición para colocar el menor elemento
-    mov w3, #0                 // Índice de inicio del bucle externo
+    mov w3, #0                 // Índice externo para el bucle
 
 outer_loop:
-    cmp w3, w1                 // Comparar índice actual con el tamaño
-    bge print_resultado        // Si hemos recorrido todo el arreglo, salimos
+    cmp w3, w1                 // Comparar índice externo con el tamaño
+    bge print_resultado        // Si hemos recorrido todo el arreglo, pasamos a imprimir
 
-    // Inicializar el mínimo como el primer elemento sin ordenar
-    mov w4, w3                 // Índice del valor mínimo
-    ldr w5, [x2, w3, LSL #2]   // Cargar el valor de arreglo[w3] en w5
+    mov w4, w3                 // Inicializar índice mínimo (w4) con w3
+    ldr w5, [x2, w3, LSL #2]   // Valor mínimo actual
 
-    // Bucle interno: busca el menor elemento en la parte no ordenada del arreglo
-    mov w6, w3                 // Inicializar el índice del bucle interno
-    add w6, w6, #1             // Comienza desde el siguiente elemento
+    mov w6, w3                 // Inicializar índice interno
+    add w6, w6, #1             // Comenzar en el siguiente elemento
 
 inner_loop:
-    cmp w6, w1                 // Comparar índice interno con el tamaño
-    bge swap_min               // Si hemos llegado al final, intercambiamos
+    cmp w6, w1                 // Verificar si índice interno está dentro del rango
+    bge swap_min               // Si hemos terminado, pasar al intercambio
 
-    // Cargar el siguiente elemento para comparar
     ldr w7, [x2, w6, LSL #2]   // Cargar arreglo[w6] en w7
+    cmp w7, w5                 // Comparar con el mínimo actual
+    bge skip_update            // Si arreglo[w6] >= mínimo actual, no actualizar
 
-    // Si encontramos un elemento menor, actualizamos el índice mínimo
-    cmp w7, w5                 // Comparar arreglo[w6] con el valor mínimo actual
-    bge skip_update            // Si arreglo[w6] >= w5, saltar la actualización
-
-    // Actualizar el índice y valor mínimo
-    mov w4, w6                 // Índice mínimo actualizado
-    mov w5, w7                 // Valor mínimo actualizado
+    mov w4, w6                 // Actualizar índice mínimo
+    mov w5, w7                 // Actualizar valor mínimo
 
 skip_update:
-    add w6, w6, #1             // Incrementar el índice del bucle interno
+    add w6, w6, #1             // Incrementar índice interno
     b inner_loop               // Repetir el bucle interno
 
 swap_min:
-    // Intercambiar el valor mínimo encontrado con el primer elemento de la parte no ordenada
-    cmp w4, w3                 // Si el índice mínimo es el mismo, no necesitamos intercambiar
-    beq skip_swap
+    cmp w4, w3                 // Comprobar si el índice mínimo es el mismo
+    beq skip_swap              // Si no hay cambio, saltar intercambio
 
-    ldr w8, [x2, w3, LSL #2]   // Cargar arreglo[w3] en w8 (valor a intercambiar)
+    ldr w8, [x2, w3, LSL #2]   // Cargar arreglo[w3] en w8
     str w5, [x2, w3, LSL #2]   // Guardar el valor mínimo en arreglo[w3]
-    str w8, [x2, w4, LSL #2]   // Guardar el valor original de arreglo[w3] en arreglo[w4]
+    str w8, [x2, w4, LSL #2]   // Guardar arreglo[w3] en arreglo[w4]
 
 skip_swap:
-    add w3, w3, #1             // Incrementar el índice para la siguiente posición en el bucle externo
+    add w3, w3, #1             // Incrementar índice externo
     b outer_loop               // Repetir el bucle externo
 
 print_resultado:
-    // Preparación para imprimir el arreglo ordenado
-    ldr x0, =msg_resultado     // Cargar el mensaje del arreglo ordenado
-    ldr w1, [x2]               // Cargar arreglo[0] en w1
-    ldr w2, [x2, #4]           // Cargar arreglo[1] en w2
-    ldr w3, [x2, #8]           // Cargar arreglo[2] en w3
-    ldr w4, [x2, #12]          // Cargar arreglo[3] en w4
-    ldr w5, [x2, #16]          // Cargar arreglo[4] en w5
-    ldr w6, [x2, #20]          // Cargar arreglo[5] en w6
+    ldr x0, =msg_resultado     // Mensaje inicial
+    bl printf                  // Imprimir mensaje
 
-    // Llamada a printf para mostrar el arreglo ordenado
-    bl printf                  // Llamada a printf para mostrar el arreglo
+    mov w3, #0                 // Inicializar índice para impresión
 
-    // Salir del programa
-    mov x8, #93                // Código de salida para syscall exit en ARM64
-    mov x0, #0                 // Código de retorno 0
+print_loop:
+    cmp w3, w1                 // Verificar si índice está dentro del rango
+    bge end_program            // Si hemos terminado, salir
+
+    ldr w4, [x2, w3, LSL #2]   // Cargar elemento actual en w4
+    ldr x0, =msg_elemento      // Formato para imprimir el número
+    mov x1, w4                 // Pasar el número como argumento a printf
+    bl printf                  // Imprimir el elemento
+
+    add w3, w3, #1             // Incrementar índice
+    b print_loop               // Repetir el bucle de impresión
+
+end_program:
+    mov x8, #93                // syscall: exit
+    mov x0, #0                 // Código de salida
     svc #0                     // Llamada al sistema
