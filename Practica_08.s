@@ -2,66 +2,69 @@
 // Fecha: 05-11-2024
 // Descripción: Cálculo de los primeros N términos de la serie de Fibonacci en ARM64
 
-    .section .data
-msg_fib: .asciz "Fibonacci(%d): %d\n"
-newline: .asciz "\n"
+   .data
+msg1:   .string "Serie de Fibonacci: \n"    // Mensaje inicial
+newline:.string "\n"                        // Carácter de nueva línea
+format: .string "%ld "                      // Formato para imprimir números
 
-    .section .text
-    .global _start
+    .text
+    .global main
+    .extern printf
 
-_start:
-    // Definimos el número de términos N de la serie de Fibonacci
-    mov x0, #10             // N = 10, queremos los primeros 10 términos
+main:
+    // Guardar registros
+    stp     x29, x30, [sp, -16]!   // Guardar frame pointer y link register
+    mov     x29, sp                 // Actualizar frame pointer
 
-    // Inicializamos los primeros términos de Fibonacci
-    mov x1, #0              // F(0) = 0
-    mov x2, #1              // F(1) = 1
-    mov x3, #2              // Contador, comenzando en 2 (ya tenemos los primeros dos términos)
+    // Imprimir mensaje inicial
+    adr     x0, msg1
+    bl      printf
 
-    // Imprimir F(0)
-    mov x4, #1              // Descriptor de archivo (stdout)
-    ldr x5, =msg_fib
-    mov x6, #0              // Índice para F(0)
-    mov x7, x1              // Valor F(0)
-    bl print_fibonacci
+    // Inicializar variables
+    mov     x19, #0                 // Primer número (n-2)
+    mov     x20, #1                 // Segundo número (n-1)
+    mov     x21, #0                 // Resultado actual
+    mov     x22, #10               // Contador (calcularemos 10 números)
 
-    // Imprimir F(1)
-    mov x6, #1              // Índice para F(1)
-    mov x7, x2              // Valor F(1)
-    bl print_fibonacci
+print_first:
+    // Imprimir primer número (0)
+    adr     x0, format
+    mov     x1, x19
+    bl      printf
+
+    // Imprimir segundo número (1)
+    adr     x0, format
+    mov     x1, x20
+    bl      printf
+
+    // Decrementar contador por los dos números ya impresos
+    sub     x22, x22, #2
 
 fibonacci_loop:
-    // Comprobar si el contador ha alcanzado N
-    cmp x3, x0
-    bge end_fibonacci       // Si x3 >= N, detenemos el bucle
+    // Verificar si hemos terminado
+    cmp     x22, #0
+    ble     end
 
-    // Calcular el siguiente número de Fibonacci
-    add x8, x1, x2          // x8 = x1 + x2, próximo término
+    // Calcular siguiente número
+    add     x21, x19, x20          // x21 = x19 + x20
+    mov     x19, x20               // x19 = x20
+    mov     x20, x21               // x20 = x21
 
-    // Preparación para imprimir el término actual
-    mov x6, x3              // Índice actual
-    mov x7, x8              // Valor actual de Fibonacci
-    bl print_fibonacci      // Llamada a función para imprimir
+    // Imprimir número actual
+    adr     x0, format
+    mov     x1, x21
+    bl      printf
 
-    // Actualizar valores para el siguiente ciclo
-    mov x1, x2              // F(n-1) = F(n)
-    mov x2, x8              // F(n) = nuevo término
-    add x3, x3, #1          // Incrementar el contador
+    // Decrementar contador
+    sub     x22, x22, #1
+    b       fibonacci_loop
 
-    // Repetir el bucle
-    b fibonacci_loop
+end:
+    // Imprimir nueva línea
+    adr     x0, newline
+    bl      printf
 
-end_fibonacci:
-    // Salir del programa
-    mov x8, #93             // syscall exit
-    mov x0, #0              // Código de retorno 0
-    svc #0                  // Llamada al sistema
-
-// Subrutina para imprimir el valor de Fibonacci actual
-print_fibonacci:
-    ldr x0, =msg_fib
-    mov x1, x6              // Índice
-    mov x2, x7              // Valor de Fibonacci
-    mov x8, #64             // syscall write
-    svc #0
+    // Restaurar registros y retornar
+    mov     x0, #0                 // Código de retorno 0
+    ldp     x29, x30, [sp], #16    // Restaurar frame pointer y link register
     ret
