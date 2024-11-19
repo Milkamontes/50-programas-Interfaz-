@@ -2,82 +2,126 @@
 // Fecha: 10-11-24
 // Descripción: Calculadora simple en ARM64 (Suma, Resta, Multiplicación, División)
 
-    .section .data
-num1: .word 12                       // Primer número
-num2: .word 3                        // Segundo número
-op_code: .word 1                     // Código de operación: 1 = suma, 2 = resta, 3 = multiplicación, 4 = división
 
-msg_suma: .asciz "Resultado de la suma: %d\n"
-msg_resta: .asciz "Resultado de la resta: %d\n"
-msg_multiplicacion: .asciz "Resultado de la multiplicación: %d\n"
-msg_division: .asciz "Resultado de la división: %d\n"
-msg_error: .asciz "Error: División por cero\n"
+.data
+    msg_welcome: .asciz "Calculadora Simple\n"
+    msg_num1: .asciz "Ingrese el primer número: "
+    msg_num2: .asciz "Ingrese el segundo número: "
+    msg_operation: .asciz "Ingrese la operación (+, -, *, /): "
+    msg_result: .asciz "El resultado es: %ld\n"
+    msg_div_zero: .asciz "Error: División por cero\n"
+    msg_invalid_op: .asciz "Error: Operación inválida\n"
+    formato_in_num: .asciz "%ld"
+    formato_in_op: .asciz " %c"
+    buffer: .skip 2
 
-    .section .text
-    .global _start
+.text
+.global main
+.align 2
 
-_start:
-    // Cargar los valores de los números y el código de operación
-    ldr x0, =num1                  // Cargar la dirección de num1
-    ldr w0, [x0]                   // Cargar el primer número en w0
+main:
+    stp x29, x30, [sp, -16]!
+    mov x29, sp
 
-    ldr x1, =num2                  // Cargar la dirección de num2
-    ldr w1, [x1]                   // Cargar el segundo número en w1
+    // Mostrar mensaje de bienvenida
+    adrp x0, msg_welcome
+    add x0, x0, :lo12:msg_welcome
+    bl printf
 
-    ldr x2, =op_code               // Cargar la dirección de op_code
-    ldr w2, [x2]                   // Cargar el código de operación en w2
+    // Pedir primer número
+    adrp x0, msg_num1
+    add x0, x0, :lo12:msg_num1
+    bl printf
 
-    // Verificar el código de operación y realizar la operación correspondiente
-    cmp w2, #1
-    beq operacion_suma             // Si op_code == 1, realizar suma
+    // Leer primer número
+    sub sp, sp, #16
+    mov x1, sp
+    adrp x0, formato_in_num
+    add x0, x0, :lo12:formato_in_num
+    bl scanf
+    ldr x19, [sp]  // x19 = primer número
+    add sp, sp, #16
 
-    cmp w2, #2
-    beq operacion_resta            // Si op_code == 2, realizar resta
+    // Pedir segundo número
+    adrp x0, msg_num2
+    add x0, x0, :lo12:msg_num2
+    bl printf
 
-    cmp w2, #3
-    beq operacion_multiplicacion   // Si op_code == 3, realizar multiplicación
+    // Leer segundo número
+    sub sp, sp, #16
+    mov x1, sp
+    adrp x0, formato_in_num
+    add x0, x0, :lo12:formato_in_num
+    bl scanf
+    ldr x20, [sp]  // x20 = segundo número
+    add sp, sp, #16
 
-    cmp w2, #4
-    beq operacion_division         // Si op_code == 4, realizar división
+    // Pedir operación
+    adrp x0, msg_operation
+    add x0, x0, :lo12:msg_operation
+    bl printf
 
-    b fin                          // Si el código no coincide, terminar el programa
+    // Leer operación
+    adrp x0, formato_in_op
+    add x0, x0, :lo12:formato_in_op
+    adrp x1, buffer
+    add x1, x1, :lo12:buffer
+    bl scanf
 
-operacion_suma:
-    add w3, w0, w1                 // Sumar w0 y w1, almacenar en w3
-    ldr x0, =msg_suma              // Mensaje de suma
-    mov x1, w3                     // Mover el resultado a x1 para printf
-    bl printf                      // Imprimir el resultado
-    b fin                          // Terminar
+    // Cargar operación
+    adrp x0, buffer
+    add x0, x0, :lo12:buffer
+    ldrb w21, [x0]  // w21 = operación
 
-operacion_resta:
-    sub w3, w0, w1                 // Restar w1 de w0, almacenar en w3
-    ldr x0, =msg_resta             // Mensaje de resta
-    mov x1, w3                     // Mover el resultado a x1 para printf
-    bl printf                      // Imprimir el resultado
-    b fin                          // Terminar
+    // Realizar operación
+    cmp w21, #'+'
+    b.eq suma
+    cmp w21, #'-'
+    b.eq resta
+    cmp w21, #'*'
+    b.eq multiplicacion
+    cmp w21, #'/'
+    b.eq division
 
-operacion_multiplicacion:
-    mul w3, w0, w1                 // Multiplicar w0 por w1, almacenar en w3
-    ldr x0, =msg_multiplicacion    // Mensaje de multiplicación
-    mov x1, w3                     // Mover el resultado a x1 para printf
-    bl printf                      // Imprimir el resultado
-    b fin                          // Terminar
+    // Operación inválida
+    adrp x0, msg_invalid_op
+    add x0, x0, :lo12:msg_invalid_op
+    bl printf
+    b end_program
 
-operacion_division:
-    cbz w1, error_division         // Verificar división por cero
-    udiv w3, w0, w1                // Dividir w0 entre w1, almacenar en w3
-    ldr x0, =msg_division          // Mensaje de división
-    mov x1, w3                     // Mover el resultado a x1 para printf
-    bl printf                      // Imprimir el resultado
-    b fin                          // Terminar
+suma:
+    add x22, x19, x20
+    b print_result
 
-error_division:
-    ldr x0, =msg_error             // Mensaje de error por división por cero
-    bl printf                      // Imprimir mensaje de error
-    b fin                          // Terminar
+resta:
+    sub x22, x19, x20
+    b print_result
 
-fin:
+multiplicacion:
+    mul x22, x19, x20
+    b print_result
+
+division:
+    // Verificar división por cero
+    cmp x20, #0
+    b.eq div_zero
+    sdiv x22, x19, x20
+    b print_result
+
+div_zero:
+    adrp x0, msg_div_zero
+    add x0, x0, :lo12:msg_div_zero
+    bl printf
+    b end_program
+
+print_result:
+    adrp x0, msg_result
+    add x0, x0, :lo12:msg_result
+    mov x1, x22
+    bl printf
+
+end_program:
     // Salir del programa
-    mov x8, #93                    // Código de salida para syscall exit en ARM64
-    mov x0, #0                     // Código de retorno 0
-    svc #0                         // Llamada al sistema
+    mov x0, #0
+    ldp x29, x30, [sp], #16
+    ret
