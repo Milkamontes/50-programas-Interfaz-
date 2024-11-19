@@ -1,6 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Convertir un número decimal a hexadecimal en ARM64
+// Asciinema: https://asciinema.org/a/690683
 
     .section .data
 num: .word 305419896              // Número decimal a convertir (ejemplo: 305419896, que es 0x12345678 en hexadecimal)
