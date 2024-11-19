@@ -1,6 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Convertir un número decimal a binario en ARM64
+// Asciinema: https://asciinema.org/a/690674
 
     .section .data
 num: .word 25                       // Número decimal a convertir (ejemplo: 25)
