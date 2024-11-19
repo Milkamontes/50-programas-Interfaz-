@@ -1,6 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Conversión de una cadena ASCII a un entero en ARM64
+// Asciinema: https://asciinema.org/a/690608
 
     .section .data
 numero_ascii: .asciz "1234"       // Número en ASCII que queremos convertir
@@ -33,11 +34,8 @@ convertir_loop:
     b convertir_loop
 
 imprimir_resultado:
-    // Preparación para imprimir el número entero convertido
     ldr x0, =msg_resultado      // Cargar el mensaje de resultado
-    mov x1, w1                  // Mover el número convertido a x1 para imprimir
-
-    // Llamada a printf para mostrar el número entero
+    uxtw x1, w1                 // Extender w1 (32 bits) a x1 (64 bits) sin signo
     bl printf                   // Llamada a printf para mostrar el número
 
     // Salir del programa
