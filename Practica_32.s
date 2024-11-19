@@ -1,8 +1,6 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
-// Descripción: Este programa calcula la potencia x^n de dos números enteros x y n.
-//              Los valores de entrada x y n deben estar en los registros x0 y x1, respectivamente.
-//              El resultado x^n se almacenará en x0.
+// Descripción: Este programa calcula la potencia x^n 
 
 .global _start       // Punto de entrada para el sistema operativo
 
