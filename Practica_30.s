@@ -3,27 +3,33 @@
 // Descripción: Este programa calcula el Máximo Común Divisor (MCD) de dos números
 //              utilizando el Algoritmo de Euclides en ARM64 ensamblador. Los números
 //              de entrada deben estar en los registros x0 y x1, y el MCD se almacenará en x0.
+// Asciinema: https://asciinema.org/a/690638
 
-.global _start      // Punto de entrada para el sistema operativo
+.section .data
+msg: .asciz "MCD: %d\n"
+
+.section .text
+.global _start
 
 _start:
-    // Cargamos los valores en los registros
-    mov x0, #56     // Primer número (por ejemplo, 56)
-    mov x1, #98     // Segundo número (por ejemplo, 98)
+    mov x0, #56                   // Primer número
+    mov x1, #98                   // Segundo número
 
 mcd_loop:
-    cmp x1, #0         // Comparamos x1 con 0
-    beq end_mcd        // Si x1 es 0, terminamos el bucle (MCD en x0)
-    
-    // Calculamos x0 = x0 % x1 usando una instrucción de división entera
-    udiv x2, x0, x1    // x2 = x0 / x1 (división entera)
-    msub x2, x2, x1, x0 // x2 = x0 - (x2 * x1), lo que da el resto
-    
-    mov x0, x1         // Intercambiamos x0 con x1
-    mov x1, x2         // y x1 con el resto (nuevo valor para la siguiente iteración)
-    b mcd_loop         // Repetimos el proceso
+    cmp x1, #0                    // Compara x1 con 0
+    beq end_mcd                   // Si x1 es 0, terminamos
+
+    udiv x2, x0, x1               // División entera
+    msub x2, x2, x1, x0           // Resto
+
+    mov x0, x1                    // Intercambiar valores
+    mov x1, x2                    // x1 = resto
+    b mcd_loop                    // Repetir
 
 end_mcd:
-    // Resultado en x0 (el MCD de los dos números originales)
-    mov w8, #93        // Código de salida del sistema para "exit" en Linux
-    svc #0             // Llamada al sistema para finalizar el programa
+    ldr x0, =msg                  // Mensaje
+    mov x1, x0                    // MCD en x0
+    bl printf                     // Llamar a printf
+
+    mov x8, #93                   // Syscall exit
+    svc #0
