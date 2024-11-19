@@ -1,48 +1,98 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Generación de números aleatorios en ARM64 usando LCG
+// Asciinema: 
 
-    .section .data
-semilla: .word 12345                  // Valor de la semilla inicial
-a: .word 1103515245                    // Constante multiplicativa
-c: .word 12345                         // Constante aditiva
-m: .word 0x7FFFFFFF                    // Módulo (2^31 - 1 para limitar a 31 bits)
-msg_resultado: .asciz "Número aleatorio: %d\n"
+ .data
+    msg_seed: .asciz "Ingrese la semilla: "
+    msg_count: .asciz "¿Cuántos números aleatorios desea generar? "
+    msg_output: .asciz "Número aleatorio %d: %u\n"
+    formato_in: .asciz "%ld"
+    newline: .asciz "\n"
 
-    .section .text
-    .global _start
+// Constantes para el generador congruencial lineal
+multiplier: .quad 1103515245
+increment: .quad 12345
+modulus: .quad 0x80000000  // 2^31
 
-_start:
-    // Cargar la semilla en un registro
-    ldr x0, =semilla               // Dirección de la semilla
-    ldr w0, [x0]                   // Cargar la semilla en w0 (X_n)
+.text
+.global main
+.align 2
 
-    // Cargar las constantes
-    ldr x1, =a                     // Dirección de la constante a
-    ldr w1, [x1]                   // Cargar a en w1
+main:
+    stp x29, x30, [sp, -32]!
+    mov x29, sp
 
-    ldr x2, =c                     // Dirección de la constante c
-    ldr w2, [x2]                   // Cargar c en w2
+    // Pedir semilla
+    adrp x0, msg_seed
+    add x0, x0, :lo12:msg_seed
+    bl printf
 
-    ldr x3, =m                     // Dirección de la constante m
-    ldr w3, [x3]                   // Cargar m en w3
+    // Leer semilla
+    add x1, sp, 16
+    adrp x0, formato_in
+    add x0, x0, :lo12:formato_in
+    bl scanf
+    ldr x19, [sp, 16]  // x19 = semilla
 
-    // Generar el siguiente número pseudoaleatorio: X_{n+1} = (a * X_n + c) mod m
-    mul w4, w1, w0                 // w4 = a * X_n
-    add w4, w4, w2                 // w4 = a * X_n + c
-    and w4, w4, w3                 // w4 = (a * X_n + c) mod m, limitar a 31 bits
+    // Pedir cantidad de números a generar
+    adrp x0, msg_count
+    add x0, x0, :lo12:msg_count
+    bl printf
 
-    // Guardar el nuevo valor de la semilla para el próximo uso
-    str w4, [x0]                   // Actualizar semilla en memoria
+    // Leer cantidad
+    add x1, sp, 24
+    adrp x0, formato_in
+    add x0, x0, :lo12:formato_in
+    bl scanf
+    ldr x20, [sp, 24]  // x20 = cantidad de números a generar
 
-    // Preparación para imprimir el número aleatorio
-    ldr x0, =msg_resultado         // Cargar el mensaje de resultado
-    mov x1, w4                     // Mover el número aleatorio a x1
+    // Inicializar contador
+    mov x21, #1  // x21 = contador actual
 
-    // Llamada a printf para mostrar el número aleatorio
-    bl printf                      // Imprimir el resultado
+generate_loop:
+    // Generar número aleatorio
+    mov x0, x19
+    bl random_number
+    mov x19, x0  // Actualizar semilla para la próxima iteración
+
+    // Imprimir número aleatorio
+    adrp x0, msg_output
+    add x0, x0, :lo12:msg_output
+    mov x1, x21
+    mov x2, x19
+    bl printf
+
+    // Incrementar contador y comprobar si hemos terminado
+    add x21, x21, #1
+    cmp x21, x20
+    b.le generate_loop
 
     // Salir del programa
-    mov x8, #93                    // Código de salida para syscall exit en ARM64
-    mov x0, #0                     // Código de retorno 0
-    svc #0                         // Llamada al sistema
+    mov x0, #0
+    ldp x29, x30, [sp], 32
+    ret
+
+// Función para generar un número aleatorio
+// Entrada: x0 = semilla actual
+// Salida: x0 = nuevo número aleatorio
+random_number:
+    // Implementación del generador congruencial lineal
+    // next = (a * seed + c) % m
+    adrp x1, multiplier
+    add x1, x1, :lo12:multiplier
+    ldr x1, [x1]
+    mul x0, x0, x1
+    
+    adrp x1, increment
+    add x1, x1, :lo12:increment
+    ldr x1, [x1]
+    add x0, x0, x1
+    
+    adrp x1, modulus
+    add x1, x1, :lo12:modulus
+    ldr x1, [x1]
+    sub x1, x1, #1
+    and x0, x0, x1  // Equivalente a % MODULUS porque MODULUS es una potencia de 2
+
+    ret
