@@ -4,39 +4,57 @@
 //              utilizando la relación MCM(a, b) = (a * b) / MCD(a, b). Los números de entrada 
 //              deben estar en los registros x0 y x1, y el resultado se almacenará en x0.
 
-.global _start       // Punto de entrada para el sistema operativo
+.section .data
+msg: .asciz "MCM: %d\n"
+buffer: .space 16                  // Espacio para el número convertido
+
+.section .text
+.global _start
 
 _start:
-    mov x0, #15      // Primer número (por ejemplo, 15)
-    mov x1, #20      // Segundo número (por ejemplo, 20)
+    mov x0, #15
+    mov x1, #20
 
-    // Guardamos los valores originales de x0 y x1 para el cálculo final del MCM
-    mov x2, x0       // Guardamos el valor original de x0 en x2
-    mov x3, x1       // Guardamos el valor original de x1 en x3
+    mov x2, x0
+    mov x3, x1
 
-    // Llamamos a la función para calcular el MCD
-    bl mcd           // MCD(x0, x1) -> Resultado en x0
+    bl mcd
 
-    // Calculamos MCM = (x2 * x3) / MCD(x2, x3)
-    mul x1, x2, x3   // Multiplicamos los valores originales: x1 = x2 * x3
-    udiv x0, x1, x0  // Dividimos el producto entre el MCD, MCM en x0
+    mul x1, x2, x3
+    udiv x0, x1, x0
 
-    // Fin del programa
-    mov w8, #93      // Código de salida del sistema para "exit" en Linux
-    svc #0           // Llamada al sistema para finalizar el programa
+    mov x2, buffer                 // Dirección del buffer
+    mov x1, x0                     // Número a convertir
+    bl itoa                        // Convierte a texto
 
-// Función para calcular el MCD utilizando el Algoritmo de Euclides
+    mov x0, 1                      // stdout
+    ldr x1, =msg                   // Mensaje base
+    mov x2, buffer                 // Número convertido
+    mov x8, #64                    // Syscall write
+    svc #0                         // Llama a write
+
+    mov w8, #93                    // Syscall exit
+    svc #0
+
 mcd:
-    cmp x1, #0         // Comparamos x1 con 0
-    beq end_mcd        // Si x1 es 0, terminamos (MCD en x0)
-    
-    // Calculamos x0 = x0 % x1 usando división entera
-    udiv x2, x0, x1    // x2 = x0 / x1
-    msub x2, x2, x1, x0 // x2 = x0 - (x2 * x1), residuo
-
-    mov x0, x1         // Intercambiamos x0 con x1
-    mov x1, x2         // y x1 con el residuo
-    b mcd              // Repetimos el proceso
-
+    cmp x1, #0
+    beq end_mcd
+    udiv x2, x0, x1
+    msub x2, x2, x1, x0
+    mov x0, x1
+    mov x1, x2
+    b mcd
 end_mcd:
-    ret                // Retornamos con el MCD en x0
+    ret
+
+itoa:                              // Convierte número en x1 a texto en buffer
+    mov x2, x1                     // Número
+    mov x3, #10                    // Base decimal
+itoa_loop:
+    udiv x4, x2, x3
+    msub x5, x4, x3, x2
+    add x5, x5, #'0'
+    strb w5, [x0], #1
+    mov x2, x4
+    cbnz x2, itoa_loop
+    ret
