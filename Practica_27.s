@@ -1,6 +1,7 @@
-// Autor: Milka Guadalupe Montes Domínguez
+// Autor: Milka Guadalupe Montes Domínguez 
 // Fecha: 10-11-24
 // Descripción: Realizar desplazamientos a la izquierda y derecha en ARM64
+// Asciinema: https://asciinema.org/a/690631
 
     .section .data
 num: .word 8                       // Número inicial
@@ -19,14 +20,16 @@ _start:
     lsl w1, w0, #2                 // w1 = w0 << 2
     // Preparación para imprimir el resultado del desplazamiento a la izquierda
     ldr x0, =msg_left_shift        // Cargar el mensaje de desplazamiento a la izquierda
-    mov x1, w1                     // Mover el resultado a x1 para imprimir
+    mov x1, xzr                    // Asegurar que x1 esté limpio
+    uxtw x1, w1                    // Extender w1 (32 bits) a x1 (64 bits)
     bl printf                      // Llamada a printf para mostrar el resultado
 
     // Realizar desplazamiento a la derecha (>> 2 posiciones)
     lsr w1, w0, #2                 // w1 = w0 >> 2
     // Preparación para imprimir el resultado del desplazamiento a la derecha
     ldr x0, =msg_right_shift       // Cargar el mensaje de desplazamiento a la derecha
-    mov x1, w1                     // Mover el resultado a x1 para imprimir
+    mov x1, xzr                    // Asegurar que x1 esté limpio
+    uxtw x1, w1                    // Extender w1 (32 bits) a x1 (64 bits)
     bl printf                      // Llamada a printf para mostrar el resultado
 
     // Salir del programa
