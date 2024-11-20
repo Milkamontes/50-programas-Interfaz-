@@ -1,7 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Este programa rota los elementos de un arreglo a la izquierda o a la derecha
-
+// Asciinema: https://asciinema.org/a/691048
 
 .data
     msg_size: .asciz "Ingrese el tamaño del arreglo: "
