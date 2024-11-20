@@ -1,6 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Implementación de una cola básica utilizando un arreglo en ARM64.
+// Asciinema: https://asciinema.org/a/691054
 
 .data
     msg_menu: .asciz "\nOperaciones de la cola:\n1. Enqueue\n2. Dequeue\n3. Peek\n4. Mostrar cola\n5. Salir\nElija una opción: "
