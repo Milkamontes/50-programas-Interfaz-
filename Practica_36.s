@@ -1,7 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Este programa encuentra el segundo elemento más grande en un arreglo de enteros.
-//
+// Asciinema: https://asciinema.org/a/691051
 
 .data
     msg_size: .asciz "Ingrese el tamaño del arreglo (mínimo 2): "
