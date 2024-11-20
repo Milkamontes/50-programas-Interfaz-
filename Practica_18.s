@@ -2,7 +2,7 @@
 // Fecha: 10-11-24
 // Descripción: Ordenamiento por mezcla (Merge Sort) de un arreglo de enteros en ARM64
 
-    .data
+     .data
 array: .word 12, 45, 7, 23, 67, 89, 34, 56, 90, 14    // Arreglo a ordenar
 arr_len: .word 10                                      // Longitud del arreglo
 temp_array: .zero 40                                   // Arreglo temporal (10 elementos * 4 bytes)
