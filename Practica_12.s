@@ -1,7 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
-// Descripción: Contar los bits activados en un número en ARM64
-// Asciinema: https://asciinema.org/a/690469
+// Descripción: Encontrar el máximo en un arreglo en ARM64
+// Asciinema: https://asciinema.org/a/691035
 
  .data
 array:      .word 12, 35, 7, 23, 67, 87, 34, 86, 90, 14 // Arreglo de ejemplol
