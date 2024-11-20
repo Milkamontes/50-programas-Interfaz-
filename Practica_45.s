@@ -1,7 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Verificar si un número es Armstrong en ARM64
-// Asciinema: 
+// Asciinema: https://asciinema.org/a/691059
 
 .data
     msg_input: .asciz "Ingrese un número positivo: "
