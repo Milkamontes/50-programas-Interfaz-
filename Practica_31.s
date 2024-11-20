@@ -1,7 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Este programa calcula el Mínimo Común Múltiplo (MCM) de dos números
-
+// Asciinema: https://asciinema.org/a/691045
 
 .data
     msg_num1: .asciz "Ingrese el primer número: "
@@ -114,6 +114,4 @@ loop_mcd:
 
 end_mcd:
     // El MCD está en x0
-    ret
-    cbnz x2, itoa_loop
     ret
