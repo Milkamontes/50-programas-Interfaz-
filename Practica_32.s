@@ -1,8 +1,9 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Este programa calcula la potencia x^n 
+// Asciinema: https://asciinema.org/a/691047
 
- .data
+.data
     msg_base: .asciz "Ingrese la base (x): "
     msg_exp: .asciz "Ingrese el exponente (n): "
     formato_in: .asciz "%ld"
