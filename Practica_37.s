@@ -1,9 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Implementación de una pila básica utilizando un arreglo en ARM64. 
-//              Incluye las operaciones push (apilar) y pop (desapilar) con verificación 
-//              de desbordamiento y subdesbordamiento. 
-
+// Asciinema: https://asciinema.org/a/691053
 
 .data
     msg_menu: .asciz "\nOperaciones de la pila:\n1. Push\n2. Pop\n3. Peek\n4. Mostrar pila\n5. Salir\nElija una opción: "
