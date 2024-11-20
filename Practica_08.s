@@ -1,6 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 05-11-2024
 // Descripción: Cálculo de los primeros N términos de la serie de Fibonacci en ARM64
+// Asciinema:  https://asciinema.org/a/691034
 
    .data
 msg1:   .string "Serie de Fibonacci: \n"    // Mensaje inicial
