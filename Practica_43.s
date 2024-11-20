@@ -1,7 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Calculadora simple en ARM64 (Suma, Resta, Multiplicación, División)
-
+// Asciinema: https://asciinema.org/a/691056
 
 .data
     msg_welcome: .asciz "Calculadora Simple\n"
