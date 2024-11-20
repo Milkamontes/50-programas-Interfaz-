@@ -1,7 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Generación de números aleatorios en ARM64 usando LCG
-// Asciinema: 
+// Asciinema: https://asciinema.org/a/691057
 
  .data
     msg_seed: .asciz "Ingrese la semilla: "
