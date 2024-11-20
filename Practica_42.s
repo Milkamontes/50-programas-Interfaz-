@@ -1,7 +1,7 @@
 // Autor: Milka Guadalupe Montes Domínguez
 // Fecha: 10-11-24
 // Descripción: Convertir un número hexadecimal (cadena) a decimal en ARM64
-
+// Asciinema: https://asciinema.org/a/691055
 
 .data
     msg_input: .asciz "Ingrese un número hexadecimal: "
